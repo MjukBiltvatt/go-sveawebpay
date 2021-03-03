@@ -18,6 +18,14 @@ type paymentResponse struct {
 	response
 }
 
+type cardTransaction struct {
+	CardType     string `xml:"cardtype"`
+	MaskedCardNo string `xml:"maskedcardno"`
+	ExpiryMonth  string `xml:"expirymonth"`
+	ExpiryYear   string `xml:"expiryyear"`
+	AuthCode     string `xml:"authcode"`
+}
+
 //Transaction represents a transaction receieved in the response message from the svea api
 type Transaction struct {
 	PaymentMethod    string `xml:"paymentmethod"`
@@ -26,9 +34,5 @@ type Transaction struct {
 	Currency         string `xml:"currency"`
 	SubscriptionID   int    `xml:"subscriptionid"`
 	SubscriptionType string `xml:"subscriptiontype"`
-	CardType         string `xml:"cardtype"`
-	MaskedCardNo     string `xml:"maskedcardno"`
-	ExpiryMonth      string `xml:"expirymonth"`
-	ExpiryYear       string `xml:"expiryyear"`
-	AuthCode         string `xml:"authcode"`
+	cardTransaction
 }
