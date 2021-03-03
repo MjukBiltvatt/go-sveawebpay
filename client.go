@@ -117,7 +117,7 @@ func (c *Client) PreparePayment(order Order) (PreparedPayment, error) {
 
 	//Make the post request to the api
 	var resp preparedPaymentResponse
-	if err := c.post("preparepayment", order, &resp); err != nil && err != ErrRequiresManualReview {
+	if err := c.post("preparepayment", order, &resp); err != nil {
 		return PreparedPayment{}, err
 	}
 	resp.PreparedPayment.test = c.Test
@@ -162,9 +162,26 @@ func (c *Client) Recur(order RecurOrder) (Transaction, error) {
 
 	//Make the post request to the api
 	var resp paymentResponse
-	if err := c.post("recur", order, &resp); err != nil && err != ErrRequiresManualReview {
+	if err := c.post("recur", order, &resp); err != nil {
 		return Transaction{}, err
 	}
 
 	return Transaction{}, nil
+}
+
+//CancelRecurSubscription calls the api to cancel an existing recur subscription so that
+//no further recurs can be made on it
+func (c *Client) CancelRecurSubscription(subscriptionID string) error {
+	//Define the request body
+	req := struct {
+		SubscriptionID string `xml:"subscriptionid"`
+	}{subscriptionID}
+
+	//Make the post request to the api
+	var resp paymentResponse
+	if err := c.post("cancelrecursubscription", req, &resp); err != nil {
+		return err
+	}
+
+	return nil
 }
