@@ -15,7 +15,7 @@ func TestClientPreparePayment(t *testing.T) {
 	c := NewClient(os.Getenv("MERCHANT_ID_TEST"), os.Getenv("SECRET_TEST"))
 	c.Test = true
 
-	preparedPayment, statusCode, err := c.PreparePayment(Order{
+	order := Order{
 		PaymentMethod: PaymentMethodCard,
 		Currency:      "SEK",
 		Amount:        100,
@@ -31,21 +31,21 @@ func TestClientPreparePayment(t *testing.T) {
 			PostalCode:   "111 11",
 			City:         "Testdalen",
 		},
-		OrderRows: OrderRows{
-			Rows: []OrderRow{
-				OrderRow{
-					Name:          "Test",
-					Description:   "Some test",
-					Amount:        100,
-					Vat:           25,
-					Quantity:      1,
-					ArticleNumber: "1",
-					Unit:          "st",
-					IPAddress:     "127.0.0.1",
-				},
-			},
+	}
+	order.AddRow(
+		OrderRow{
+			Name:          "Test",
+			Description:   "Some test",
+			Amount:        100,
+			Vat:           25,
+			Quantity:      1,
+			ArticleNumber: "1",
+			Unit:          "st",
+			IPAddress:     "127.0.0.1",
 		},
-	})
+	)
+
+	preparedPayment, statusCode, err := c.PreparePayment(order)
 	if err != nil {
 		t.Error(err)
 		return

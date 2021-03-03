@@ -45,9 +45,6 @@ func (c *Client) post(URL string, body interface{}, dst interface{}) error {
 	}
 	b = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + string(b))
 
-	fmt.Println("Body: ", string(b))
-	return nil
-
 	//Create the mac
 	h := sha512.New()
 	if _, err := h.Write([]byte(base64.StdEncoding.EncodeToString(b) + c.secret)); err != nil {

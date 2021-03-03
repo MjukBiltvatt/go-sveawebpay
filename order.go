@@ -64,10 +64,10 @@ type Order struct {
 	Lang               string    `xml:"lang"`
 	SubscriptionType   string    `xml:"subscriptiontype"`
 	ExternalPaymentRef string    `xml:"externalpaymentref"`
-	OrderRows          OrderRows `xml:"orderrows"`
 	Customer           Customer  `xml:"customer"`
 	IPAddress          string    `xml:"ipaddress"`
 	SSN                string    `xml:"ssn"`
+	Rows               OrderRows `xml:"orderrows"`
 }
 
 //OrderRows represents the xml `orderrows` element in an order
@@ -87,7 +87,12 @@ type OrderRow struct {
 	IPAddress     string `xml:"ipaddress"`
 }
 
-//AddOrderRow appends an order row the the slice of order rows in the order
-func (o *Order) AddOrderRow(row OrderRow) {
-	o.OrderRows.Rows = append(o.OrderRows.Rows, row)
+//AddRow appends an order row the the slice of order rows in the order
+func (o *Order) AddRow(row OrderRow) {
+	o.Rows.Rows = append(o.Rows.Rows, row)
+}
+
+//SetRows sets the order rows slice in the order
+func (o *Order) SetRows(rows []OrderRow) {
+	o.Rows.Rows = rows
 }
