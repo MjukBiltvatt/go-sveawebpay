@@ -125,7 +125,7 @@ func (c *Client) PreparePayment(order Order) (preparedPayment PreparedPayment, s
 
 	//Make the post request to the api
 	var resp preparedPaymentResponse
-	if err := c.post(reqURL, order, &resp); err != nil {
+	if err := c.post(reqURL, o, &resp); err != nil {
 		return PreparedPayment{}, -1, err
 	}
 	resp.PreparedPayment.test = c.Test
