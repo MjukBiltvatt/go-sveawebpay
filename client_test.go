@@ -52,13 +52,13 @@ func TestClientPreparePayment(t *testing.T) {
 	)
 
 	//Prepare the payment
-	preparedPayment, statusCode, err := c.PreparePayment(order)
-	if err != nil {
+	preparedPayment, err := c.PreparePayment(order)
+	if err != nil && ErrToCode(err) < 0 {
 		t.Error(err)
 		return
 	}
 
 	t.Logf("PreparedPayment: %v", preparedPayment)
 	t.Logf("URL: %v", preparedPayment.URL())
-	t.Logf("Statuscode: %v", statusCode)
+	t.Logf("Statuscode: %v", ErrToCode(err))
 }
