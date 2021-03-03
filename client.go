@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -25,6 +26,21 @@ type response struct {
 type preparedPaymentResponse struct {
 	PreparedPayment PreparedPayment `xml:"preparedpayment"`
 	StatusCode      int             `xml:"statuscode"`
+}
+
+type paymentResponse struct {
+	Transaction Transaction `xml:"transaction"`
+	StatusCode  int         `xml:"statuscode"`
+}
+
+//Transaction represents a transaction receieved in the response message from the svea api
+type Transaction struct {
+	PaymentMethod    string `xml:"paymentmethod"`
+	CustomerRefNo    string `xml:"customerrefno"`
+	Amount           int64  `xml:"amount"`
+	Currency         string `xml:"currency"`
+	SubscriptionID   int    `xml:"subscriptionid"`
+	SubscriptionType string `xml:"subscriptiontype"`
 }
 
 //NewClient creates a new client used for calls to the svea payment gateway api
@@ -103,6 +119,10 @@ func (c *Client) PreparePayment(order Order) (preparedPayment PreparedPayment, s
 		reqURL = "https://webpaypaymentgatewaytest.svea.com/webpay/rest/preparepayment"
 	}
 
+	//Create a copy of the order prepared for the request
+	o := order
+	o.Amount *= 100
+
 	//Make the post request to the api
 	var resp preparedPaymentResponse
 	if err := c.post(reqURL, order, &resp); err != nil {
@@ -111,4 +131,35 @@ func (c *Client) PreparePayment(order Order) (preparedPayment PreparedPayment, s
 	resp.PreparedPayment.test = c.Test
 
 	return resp.PreparedPayment, resp.StatusCode, nil
+}
+
+//DecodePaymentResponseBody decodes the response body of a call to the svea api.
+//It can for example be used in the callback of a prepared payment.
+func (c *Client) DecodePaymentResponseBody(r io.Reader) (transaction Transaction, statusCode int, err error) {
+	//Read the response body
+	buf := new(bytes.Buffer)
+	if i, err := buf.ReadFrom(r); err != nil {
+		return transaction, -1, fmt.Errorf("failed to read response body (%v bytes read): %v", i, err.Error())
+	}
+
+	//Unmarshal the response body
+	var x response
+	if err := xml.Unmarshal(buf.Bytes(), &x); err != nil {
+		return transaction, -1, fmt.Errorf("failed to unmarshal xml response body: %v", err.Error())
+	}
+
+	//Decode the base64 response message
+	d, err := base64.StdEncoding.DecodeString(x.Message)
+	if err != nil {
+		return transaction, -1, fmt.Errorf("failed to decode base64 response message: %v", err.Error())
+	}
+
+	//Unmarshal the xml response message
+	var p paymentResponse
+	if err := xml.Unmarshal(d, &transaction); err != nil {
+		return transaction, -1, fmt.Errorf("failed to unmarshal xml response message: %v", err.Error())
+	}
+	p.Transaction.Amount /= 100
+
+	return p.Transaction, p.StatusCode, nil
 }
