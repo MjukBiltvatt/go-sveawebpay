@@ -174,8 +174,11 @@ func (c *Client) Recur(order RecurOrder) (Transaction, error) {
 func (c *Client) CancelRecurSubscription(subscriptionID string) error {
 	//Define the request body
 	req := struct {
-		SubscriptionID string `xml:"subscriptionid"`
-	}{subscriptionID}
+		XMLName        xml.Name `xml:"cancelrecursubscription"`
+		SubscriptionID string   `xml:"subscriptionid"`
+	}{
+		SubscriptionID: subscriptionID,
+	}
 
 	//Make the post request to the api
 	var resp paymentResponse
