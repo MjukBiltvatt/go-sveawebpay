@@ -26,4 +26,9 @@ type Transaction struct {
 	Currency         string `xml:"currency"`
 	SubscriptionID   int    `xml:"subscriptionid"`
 	SubscriptionType string `xml:"subscriptiontype"`
+	CardType         string `xml:"cardtype"`
+	MaskedCardNo     string `xml:"maskedcardno"`
+	ExpiryMonth      string `xml:"expirymonth"`
+	ExpiryYear       string `xml:"expiryyear"`
+	AuthCode         string `xml:"authcode"`
 }

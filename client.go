@@ -12,6 +12,12 @@ import (
 	"net/url"
 )
 
+//URLTest is the api url used for tests
+const URLTest = "https://webpaypaymentgatewaytest.svea.com/webpay/rest/"
+
+//URLProd is the api url used in prod
+const URLProd = "https://webpaypaymentgateway.svea.com/webpay/rest/"
+
 //Client holds the necessary credentials to make requests to the svea apis
 type Client struct {
 	merchantID string
@@ -29,7 +35,7 @@ func NewClient(merchantID string, secret string) Client {
 
 //post makes a http post request to the specified url with the specified body and
 //unmarshals the response from xml to the specified response interface
-func (c *Client) post(URL string, body interface{}, dst interface{}) error {
+func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	//Marshal xml body
 	b, err := xml.Marshal(body)
 	if err != nil {
@@ -50,8 +56,14 @@ func (c *Client) post(URL string, body interface{}, dst interface{}) error {
 	form.Add("message", base64.StdEncoding.EncodeToString(b))
 	form.Add("mac", mac)
 
+	//Determine the URL to use
+	URL := URLProd
+	if c.Test {
+		URL = URLTest
+	}
+
 	//Do the request
-	resp, err := http.DefaultClient.PostForm(URL, form)
+	resp, err := http.DefaultClient.PostForm(URL+method, form)
 	if err != nil {
 		return fmt.Errorf("package error: request failed: %v", err.Error())
 	}
@@ -101,19 +113,11 @@ func (c *Client) post(URL string, body interface{}, dst interface{}) error {
 //Otherwise a nil error is returned along with the statuscode returned by the api.
 //Always check the error and status code before using the prepared payment.
 func (c *Client) PreparePayment(order Order) (PreparedPayment, error) {
-	//Determine the request url to use
-	reqURL := "https://webpaypaymentgateway.svea.com/webpay/rest/preparepayment"
-	if c.Test {
-		reqURL = "https://webpaypaymentgatewaytest.svea.com/webpay/rest/preparepayment"
-	}
-
-	//Create a copy of the order prepared for the request
-	o := order
-	o.Amount *= 100
+	order.Amount *= 100
 
 	//Make the post request to the api
 	var resp preparedPaymentResponse
-	if err := c.post(reqURL, o, &resp); err != nil && err != ErrRequiresManualReview {
+	if err := c.post("preparepayment", order, &resp); err != nil && err != ErrRequiresManualReview {
 		return PreparedPayment{}, err
 	}
 	resp.PreparedPayment.test = c.Test
@@ -150,4 +154,17 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (Transaction, error) {
 	p.Transaction.Amount /= 100
 
 	return p.Transaction, nil
+}
+
+//Recur calls the api to create a new transaction for an existing subscription
+func (c *Client) Recur(order RecurOrder) (Transaction, error) {
+	order.Amount *= 100
+
+	//Make the post request to the api
+	var resp paymentResponse
+	if err := c.post("recur", order, &resp); err != nil && err != ErrRequiresManualReview {
+		return Transaction{}, err
+	}
+
+	return Transaction{}, nil
 }

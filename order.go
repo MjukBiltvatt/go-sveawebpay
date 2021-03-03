@@ -54,8 +54,8 @@ type Order struct {
 	XMLName            xml.Name  `xml:"payment"`
 	PaymentMethod      string    `xml:"paymentmethod"`
 	Currency           string    `xml:"currency"`
-	Amount             int64     `xml:"amount"`
-	Vat                int64     `xml:"vat"`
+	Amount             float64   `xml:"amount"`
+	Vat                float64   `xml:"vat"`
 	CustomerRefNo      string    `xml:"customerrefno"`
 	ReturnURL          string    `xml:"returnurl"`
 	CancelURL          string    `xml:"cancelurl"`
@@ -70,23 +70,6 @@ type Order struct {
 	Rows               OrderRows `xml:"orderrows"`
 }
 
-//OrderRows represents the xml `orderrows` element in an order
-type OrderRows struct {
-	Rows []OrderRow `xml:"row"`
-}
-
-//OrderRow represents an order row
-type OrderRow struct {
-	Name          string `xml:"name"`
-	Description   string `xml:"description"`
-	Amount        int64  `xml:"amount"`
-	Vat           int64  `xml:"vat"`
-	Quantity      int64  `xml:"quantity"`
-	ArticleNumber string `xml:"sku"`
-	Unit          string `xml:"unit"`
-	IPAddress     string `xml:"ipaddress"`
-}
-
 //AddRow appends an order row the the slice of order rows in the order
 func (o *Order) AddRow(row OrderRow) {
 	o.Rows.Rows = append(o.Rows.Rows, row)
@@ -95,4 +78,32 @@ func (o *Order) AddRow(row OrderRow) {
 //SetRows sets the order rows slice in the order
 func (o *Order) SetRows(rows []OrderRow) {
 	o.Rows.Rows = rows
+}
+
+//OrderRows represents the xml `orderrows` element in an order
+type OrderRows struct {
+	Rows []OrderRow `xml:"row"`
+}
+
+//OrderRow represents an order row
+type OrderRow struct {
+	Name          string  `xml:"name"`
+	Description   string  `xml:"description"`
+	Amount        float64 `xml:"amount"`
+	Vat           float64 `xml:"vat"`
+	Quantity      int     `xml:"quantity"`
+	ArticleNumber string  `xml:"sku"`
+	Unit          string  `xml:"unit"`
+	IPAddress     string  `xml:"ipaddress"`
+}
+
+//RecurOrder represents an order to be used to create a recur transaction for
+//an existing subscription
+type RecurOrder struct {
+	XMLName        xml.Name `xml:"recur"`
+	CustomerRefNo  string   `xml:"customerrefno"`
+	SubscriptionID int      `xml:"subscriptionid"`
+	Currency       string   `xml:"currency"`
+	Amount         float64  `xml:"amount"`
+	Vat            float64  `xml:"vat"`
 }
