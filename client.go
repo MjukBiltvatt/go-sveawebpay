@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -278,4 +279,46 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 	}
 
 	return nil
+}
+
+//GetTransaction calls the api to get information about a specific order with either the specified
+//transaction-id or customer reference number. Both does not need to be provided. If `transactionID <= 0`,
+//`customerRefNo` will be used. If `customerRefNo` is an empty string as well a package error will
+//be returned. If both are set `transactionID` will be used.
+//
+//**Please only use this when needed. Repetitive polling is not allowed.**
+func (c *Client) GetTransaction(transactionID int, customerRefNo string) (Transaction, error) {
+	var req interface{}
+	var method string
+
+	//Define the request body
+	if transactionID <= 0 {
+		//Transaction id is not provided, use the customer reference number
+		method = "querycustomerrefno"
+		req = struct {
+			XMLName       xml.Name `xml:"loweramount"`
+			CustomerRefNo string   `xml:"customerrefno"`
+		}{
+			CustomerRefNo: customerRefNo,
+		}
+	} else if len(customerRefNo) > 0 {
+		//Use the customer reference number if the transaction id is not provided
+		method = "querytransactionid"
+		req = struct {
+			XMLName       xml.Name `xml:"loweramount"`
+			TransactionID int      `xml:"transactionid"`
+		}{
+			TransactionID: transactionID,
+		}
+	} else {
+		return Transaction{}, errors.New("package error: neither a transaction id or customer reference number is provided")
+	}
+
+	//Make the post request to the api
+	var resp paymentResponse
+	if err := c.post(method, req, &resp); err != nil {
+		return Transaction{}, err
+	}
+
+	return resp.Transaction, nil
 }
