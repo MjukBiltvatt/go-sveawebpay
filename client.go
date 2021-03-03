@@ -116,48 +116,48 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 //ahead of the request, status code -1 and a non nil error is returned.
 //Otherwise a nil error is returned along with the statuscode returned by the api.
 //Always check the error and status code before using the prepared payment.
-func (c *Client) PreparePayment(order Order) (PreparedPayment, error) {
+func (c *Client) PreparePayment(order Order) (*PreparedPayment, error) {
 	order.Amount *= 100
 
 	//Make the post request to the api
 	var resp preparedPaymentResponse
 	if err := c.post("preparepayment", order, &resp); err != nil {
-		return PreparedPayment{}, err
+		return nil, err
 	}
 	resp.PreparedPayment.test = c.Test
 
-	return resp.PreparedPayment, nil
+	return &resp.PreparedPayment, nil
 }
 
 //DecodePaymentResponseBody decodes the response body of a call to the svea api.
 //It can for example be used in the callback of a prepared payment.
-func (c *Client) DecodePaymentResponseBody(r io.Reader) (Transaction, error) {
+func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	//Read the response body
 	buf := new(bytes.Buffer)
 	if i, err := buf.ReadFrom(r); err != nil {
-		return Transaction{}, fmt.Errorf("package error: failed to read response body (%v bytes read): %v", i, err.Error())
+		return nil, fmt.Errorf("package error: failed to read response body (%v bytes read): %v", i, err.Error())
 	}
 
 	//Unmarshal the response body
 	var rb responseBody
 	if err := xml.Unmarshal(buf.Bytes(), &rb); err != nil {
-		return Transaction{}, fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
+		return nil, fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
 	}
 
 	//Decode the base64 response message
 	d, err := base64.StdEncoding.DecodeString(rb.Message)
 	if err != nil {
-		return Transaction{}, fmt.Errorf("package error: failed to decode base64 response message: %v", err.Error())
+		return nil, fmt.Errorf("package error: failed to decode base64 response message: %v", err.Error())
 	}
 
 	//Unmarshal the xml response message
 	var p paymentResponse
 	if err := xml.Unmarshal(d, &p); err != nil {
-		return Transaction{}, fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
+		return nil, fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
 	}
 	p.Transaction.Amount /= 100
 
-	return p.Transaction, nil
+	return &p.Transaction, nil
 }
 
 //Recur calls the api to create a new transaction for an existing subscription
@@ -287,7 +287,7 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 //be returned. If both are set `transactionID` will be used.
 //
 //**Please only use this when needed. Repetitive polling is not allowed.**
-func (c *Client) GetTransaction(transactionID int, customerRefNo string) (Transaction, error) {
+func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Transaction, error) {
 	var req interface{}
 	var method string
 
@@ -311,14 +311,14 @@ func (c *Client) GetTransaction(transactionID int, customerRefNo string) (Transa
 			TransactionID: transactionID,
 		}
 	} else {
-		return Transaction{}, errors.New("package error: neither a transaction id or customer reference number is provided")
+		return nil, errors.New("package error: neither a transaction id or customer reference number is provided")
 	}
 
 	//Make the post request to the api
 	var resp paymentResponse
 	if err := c.post(method, req, &resp); err != nil {
-		return Transaction{}, err
+		return nil, err
 	}
 
-	return resp.Transaction, nil
+	return &resp.Transaction, nil
 }
