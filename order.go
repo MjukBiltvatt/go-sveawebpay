@@ -2,52 +2,59 @@ package sveawebpay
 
 import "encoding/xml"
 
-//PaymentMethodCard should be used when referring to the card payment method
-const PaymentMethodCard = "SVEACARDPAY"
+//Available payment methods
+const (
+	PaymentMethodCard  string = "SVEACARDPAY"
+	PaymentMethodSwish string = "SWISH"
+)
 
-//PaymentMethodSwish should be used when referring to the swish payment method
-const PaymentMethodSwish = "SWISH"
+const (
+	//SubscriptionTypeRecurring should be used when referring to the initial order
+	//for a recurring subscription when the initial order should not be captured
+	SubscriptionTypeRecurring string = "RECURRING"
 
-//SubscriptionTypeRecurring should be used when referring to the initial order
-//for a recurring subscription when the initial order should not be captured
-const SubscriptionTypeRecurring = "RECURRING"
+	//SubscriptionTypeRecurringCapture should be used when referring to the initial order
+	//for a recurring subscription when the initial order should be captured
+	SubscriptionTypeRecurringCapture string = "RECURRINGCAPTURE"
+)
 
-//SubscriptionTypeRecurringCapture should be used when referring to the initial order
-//for a recurring subscription when the initial order should be captured
-const SubscriptionTypeRecurringCapture = "RECURRINGCAPTURE"
+//Available language codes
+const (
+	LangSwedish   string = "sv"
+	LangDanish    string = "da"
+	LangGerman    string = "de"
+	LangEnglish   string = "en"
+	LangFinnish   string = "fi"
+	LangFrench    string = "fr"
+	LangNorwegian string = "no"
+	LangPolish    string = "pl"
+	LangSpanish   string = "es"
+	LangItalian   string = "it"
+	LangDutch     string = "nl"
+)
 
-//LangSwedish represents the language code for swedish
-const LangSwedish = "sv"
-
-//LangDanish represents the language code for danish
-const LangDanish = "da"
-
-//LangGerman represents the language code for german
-const LangGerman = "de"
-
-//LangEnglish represents the language code for english
-const LangEnglish = "en"
-
-//LangFinnish represents the language code for finnish
-const LangFinnish = "fi"
-
-//LangFrench represents the language code for french
-const LangFrench = "fr"
-
-//LangNorwegian represents the language code for norwegian
-const LangNorwegian = "no"
-
-//LangPolish represents the language code for polish
-const LangPolish = "pl"
-
-//LangSpanish represents the language code for spanish
-const LangSpanish = "es"
-
-//LangItalian represents the language code for italian
-const LangItalian = "it"
-
-//LangDutch represents the language code for dutch
-const LangDutch = "nl"
+//During the lifetime of a transaction, the status may change many times, most often ending up as
+//either SUCCESS or FAILED. The status can be obtained by calling the `GetTransaction` method.
+//The range of possible statuses for a specific transaction depends on its payment method.
+const (
+	TransStatusNew              string = "NEW"
+	TransStatusReceived         string = "RECEIVED"
+	TransStatusInvalid          string = "INVALID"
+	TransStatusValid            string = "VALID"
+	TransStatusPending          string = "PENDING"
+	TransStatusPendingRecur     string = "PENDINGRECUR"
+	TransStatusResponseReceived string = "RESPONSE_RECEIVED"
+	TransStatusFailed           string = "FAILED"
+	TransStatusCancelled        string = "CANCELLED"
+	TransStatusRegistered       string = "REGISTERED"
+	TransStatusAuthorized       string = "AUTHORIZED"
+	TransStatusConfirmed        string = "CONFIRMED"
+	TransStatusAnnulled         string = "ANNULLED"
+	TransStatusCapturePending   string = "CAPTPENDING"
+	TransStatusCaptureFailed    string = "CAPTFAILED"
+	TransStatusSuccess          string = "SUCCESS"
+	TransStatusError            string = "ERROR"
+)
 
 //Order represents a payment message to the payment gateway api
 type Order struct {
