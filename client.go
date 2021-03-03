@@ -255,3 +255,27 @@ func (c *Client) Confirm(transactionID int, captureDate time.Time) error {
 
 	return nil
 }
+
+//LowerAmount calls the api to lower the amount on a transaction before it has been captured.
+//It is intended for card transactions having the status AUTHORIZED or CONFIRMED. It can be
+//used e.g. if the merchant is unable to deliver all of the items that was ordered by the customer,
+//and wants to lower the total amount to pay. If the `amountToLower` is equal to the authorized
+//amount, the transaction status will change to annulled.
+func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
+	//Define the request body
+	req := struct {
+		XMLName       xml.Name `xml:"loweramount"`
+		TransactionID int      `xml:"transactionid"`
+		AmountToLower float64  `xml:"amounttolower"`
+	}{
+		TransactionID: transactionID,
+		AmountToLower: amountToLower * 100,
+	}
+
+	//Make the post request to the api
+	if err := c.post("loweramount", req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
