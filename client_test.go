@@ -7,14 +7,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
+//TestClientPreparePayment tests the `Client` method `PreparePayment`
 func TestClientPreparePayment(t *testing.T) {
+	//Load .env file
 	if err := godotenv.Load(); err != nil {
 		t.Errorf("failed to load .env: %v", err.Error())
 	}
 
+	//Create client
 	c := NewClient(os.Getenv("MERCHANT_ID_TEST"), os.Getenv("SECRET_TEST"))
 	c.Test = true
 
+	//Create order
 	order := Order{
 		PaymentMethod: PaymentMethodCard,
 		Currency:      "SEK",
@@ -32,6 +36,8 @@ func TestClientPreparePayment(t *testing.T) {
 			City:         "Testdalen",
 		},
 	}
+
+	//Add order row
 	order.AddRow(
 		OrderRow{
 			Name:          "Test",
@@ -45,6 +51,7 @@ func TestClientPreparePayment(t *testing.T) {
 		},
 	)
 
+	//Prepare the payment
 	preparedPayment, statusCode, err := c.PreparePayment(order)
 	if err != nil {
 		t.Error(err)
