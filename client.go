@@ -87,9 +87,11 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 		return fmt.Errorf("package error: failed to decode base64 response message: %v", err.Error())
 	}
 
-	//Unmarshal the xml response message
-	if err := xml.Unmarshal(d, dst); err != nil {
-		return fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
+	if dst != nil {
+		//Unmarshal the xml response message
+		if err := xml.Unmarshal(d, dst); err != nil {
+			return fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
+		}
 	}
 
 	//Unmarshal the xml response to get the status code
@@ -183,6 +185,27 @@ func (c *Client) CancelRecurSubscription(subscriptionID string) error {
 	//Make the post request to the api
 	var resp paymentResponse
 	if err := c.post("cancelrecursubscription", req, &resp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//Credit calls the api to return money to the customer. Only transactions that have reached
+//the status SUCCESS can be credited
+func (c *Client) Credit(transactionID int, amount float64) error {
+	//Define the request body
+	req := struct {
+		XMLName        xml.Name `xml:"credit"`
+		TransactionID  int      `xml:"transactionid"`
+		AmountToCredit float64  `xml:"amounttocredit"`
+	}{
+		TransactionID:  transactionID,
+		AmountToCredit: amount * 100,
+	}
+
+	//Make the post request to the api
+	if err := c.post("credit", req, nil); err != nil {
 		return err
 	}
 
