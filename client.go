@@ -175,11 +175,11 @@ func (c *Client) Recur(order RecurOrder) (Transaction, error) {
 
 //CancelRecurSubscription calls the api to cancel an existing recur subscription so that
 //no further recurs can be made on it
-func (c *Client) CancelRecurSubscription(subscriptionID string) error {
+func (c *Client) CancelRecurSubscription(subscriptionID int) error {
 	//Define the request body
 	req := struct {
 		XMLName        xml.Name `xml:"cancelrecursubscription"`
-		SubscriptionID string   `xml:"subscriptionid"`
+		SubscriptionID int      `xml:"subscriptionid"`
 	}{
 		SubscriptionID: subscriptionID,
 	}
