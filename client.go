@@ -211,3 +211,22 @@ func (c *Client) Credit(transactionID int, amount float64) error {
 
 	return nil
 }
+
+//Annul calls the api to cancel a payment before it has been captured. It can only be
+//performed on card, invoice, or payment plan transactions having the status AUTHORIZED or CONFIRMED
+func (c *Client) Annul(transactionID int) error {
+	//Define the request body
+	req := struct {
+		XMLName       xml.Name `xml:"credit"`
+		TransactionID int      `xml:"transactionid"`
+	}{
+		TransactionID: transactionID,
+	}
+
+	//Make the post request to the api
+	if err := c.post("annul", req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
