@@ -4,8 +4,9 @@ import "encoding/xml"
 
 //Available payment methods
 const (
-	PaymentMethodCard  string = "SVEACARDPAY"
-	PaymentMethodSwish string = "SWISH"
+	PaymentMethodCard   string = "SVEACARDPAY"
+	PaymentMethodSwish  string = "SWISH"
+	PaymentMethodPaypal string = "PAYPAL"
 )
 
 const (
