@@ -1,5 +1,7 @@
 package sveawebpay
 
+import "encoding/xml"
+
 //PaymentMethodCard should be used when referring to the card payment method
 const PaymentMethodCard = "SVEACARDPAY"
 
@@ -49,20 +51,28 @@ const LangDutch = "nl"
 
 //Order represents a payment message to the payment gateway api
 type Order struct {
-	PaymentMethod      string     `xml:"paymentmethod"`
-	Currency           string     `xml:"currency"`
-	Amount             int64      `xml:"amount"`
-	Vat                int64      `xml:"vat"`
-	CustomerRefNo      string     `xml:"customerrefno"`
-	ReturnURL          string     `xml:"returnurl"`
-	CancelURL          string     `xml:"cancelurl"`
-	CallbackURL        string     `xml:"callbackurl"`
-	SimulatorCode      int        `xml:"simulatorcode"`
-	Lang               string     `xml:"lang"`
-	SubscriptionType   string     `xml:"subscriptiontype"`
-	ExternalPaymentRef string     `xml:"externalpaymentref"`
-	OrderRows          []OrderRow `xml:"orderrows"`
-	Customer           Customer   `xml:"customer"`
+	XMLName            xml.Name  `xml:"payment"`
+	PaymentMethod      string    `xml:"paymentmethod"`
+	Currency           string    `xml:"currency"`
+	Amount             int64     `xml:"amount"`
+	Vat                int64     `xml:"vat"`
+	CustomerRefNo      string    `xml:"customerrefno"`
+	ReturnURL          string    `xml:"returnurl"`
+	CancelURL          string    `xml:"cancelurl"`
+	CallbackURL        string    `xml:"callbackurl"`
+	SimulatorCode      string    `xml:"simulatorcode"`
+	Lang               string    `xml:"lang"`
+	SubscriptionType   string    `xml:"subscriptiontype"`
+	ExternalPaymentRef string    `xml:"externalpaymentref"`
+	OrderRows          OrderRows `xml:"orderrows"`
+	Customer           Customer  `xml:"customer"`
+	IPAddress          string    `xml:"ipaddress"`
+	SSN                string    `xml:"ssn"`
+}
+
+//OrderRows represents the xml `orderrows` element in an order
+type OrderRows struct {
+	Rows []OrderRow `xml:"row"`
 }
 
 //OrderRow represents an order row
@@ -75,4 +85,9 @@ type OrderRow struct {
 	ArticleNumber string `xml:"sku"`
 	Unit          string `xml:"unit"`
 	IPAddress     string `xml:"ipaddress"`
+}
+
+//AddOrderRow appends an order row the the slice of order rows in the order
+func (o *Order) AddOrderRow(row OrderRow) {
+	o.OrderRows.Rows = append(o.OrderRows.Rows, row)
 }

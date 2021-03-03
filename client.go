@@ -1,14 +1,15 @@
 package sveawebpay
 
 import (
+	"bytes"
+	"crypto/sha512"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/xml"
 	"fmt"
+	"net/http"
+	"net/url"
 )
-
-//URLTest is the url that will be used for tests
-const URLTest = "https://webpaypaymentgatewaytest.svea.com/webpay/payment"
-
-//URLProd is the url that will be used in prod
-const URLProd = "https://webpaypaymentgateway.svea.com/webpay/payment"
 
 //Client holds the necessary credentials to make requests to the svea apis
 type Client struct {
@@ -17,8 +18,13 @@ type Client struct {
 	Test       bool
 }
 
-type request struct {
-	Payment Order `xml:"payment"`
+type response struct {
+	Message string `xml:"message"`
+}
+
+type preparedPaymentResponse struct {
+	PreparedPayment PreparedPayment `xml:"preparedpayment"`
+	StatusCode      int             `xml:"statuscode"`
 }
 
 //NewClient creates a new client used for calls to the svea payment gateway api
@@ -29,33 +35,71 @@ func NewClient(merchantID string, secret string) Client {
 	}
 }
 
-//getURL returns the url to the payment gateway api depending on whether or not
-//the client has been set for testing or not
-func (c *Client) getURL() string {
-	if c.Test {
-		return URLTest
-	}
-
-	return URLProd
-}
-
 //post makes a http post request to the specified url with the specified body and
 //unmarshals the response from xml to the specified response interface
-func (c *Client) post(url string, body interface{}, response interface{}) error {
+func (c *Client) post(URL string, body interface{}, dst interface{}) error {
+	//Marshal xml body
+	b, err := xml.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("failed to marshal xml body: %v", err.Error())
+	}
+	b = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + string(b))
+
+	fmt.Println("Body: ", string(b))
+	return nil
+
+	//Create the mac
+	h := sha512.New()
+	if _, err := h.Write([]byte(base64.StdEncoding.EncodeToString(b) + c.secret)); err != nil {
+		return fmt.Errorf("failed to hash mac: %v", err.Error())
+	}
+	mac := hex.EncodeToString(h.Sum(nil))
+
+	//Create the post form
+	form := url.Values{}
+	form.Add("merchantid", c.merchantID)
+	form.Add("message", base64.StdEncoding.EncodeToString(b))
+	form.Add("mac", mac)
+
+	//Do the request
+	resp, err := http.DefaultClient.PostForm(URL, form)
+	if err != nil {
+		return fmt.Errorf("request failed: %v", err.Error())
+	}
+	defer resp.Body.Close()
+
+	//Read the response body
+	buf := new(bytes.Buffer)
+	if i, err := buf.ReadFrom(resp.Body); err != nil {
+		return fmt.Errorf("failed to read response body (%v bytes read): %v", i, err.Error())
+	}
+
+	//Unmarshal the response body
+	var x response
+	if err := xml.Unmarshal(buf.Bytes(), &x); err != nil {
+		return fmt.Errorf("failed to unmarshal xml response body: %v", err.Error())
+	}
+
+	//Decode the base64 response message
+	d, err := base64.StdEncoding.DecodeString(x.Message)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 response message: %v", err.Error())
+	}
+
+	//Unmarshal the xml response message
+	if err := xml.Unmarshal(d, dst); err != nil {
+		return fmt.Errorf("failed to unmarshal xml response message: %v", err.Error())
+	}
+
 	return nil
 }
 
 //PreparePayment calls the api to prepare a payment and if successful
-//gets a url that can be visited to complete the payment
-func (c *Client) PreparePayment(order Order) (url string, err error) {
-	type response struct {
-		PreparedPayment struct {
-			ID          int    `xml:"id"`
-			DateCreated string `xml:"created"`
-		} `xml:"preparedpayment"`
-		StatusCode int `xml:"statuscode"`
-	}
-
+//gets a url that can be visited to complete the payment. If an error occurs
+//ahead of the request, status code -1 and a non nil error is returned.
+//Otherwise a nil error is returned along with the statuscode returned by the api.
+//Always check the error and status code before using the prepared payment.
+func (c *Client) PreparePayment(order Order) (preparedPayment PreparedPayment, statusCode int, err error) {
 	//Determine the request url to use
 	reqURL := "https://webpaypaymentgateway.svea.com/webpay/rest/preparepayment"
 	if c.Test {
@@ -63,17 +107,11 @@ func (c *Client) PreparePayment(order Order) (url string, err error) {
 	}
 
 	//Make the post request to the api
-	var resp response
-	if err := c.post(reqURL, request{order}, &resp); err != nil {
-		return "", err
+	var resp preparedPaymentResponse
+	if err := c.post(reqURL, order, &resp); err != nil {
+		return PreparedPayment{}, -1, err
 	}
+	resp.PreparedPayment.test = c.Test
 
-	//Format the url to return
-	if c.Test {
-		url = fmt.Sprintf("https://webpaypaymentgatewaystage.svea.com/webpay/preparedpayment/%v", resp.PreparedPayment.ID)
-	} else {
-		url = fmt.Sprintf("https://webpaypaymentgateway.svea.com/webpay/preparedpayment/%v", resp.PreparedPayment.ID)
-	}
-
-	return url, nil
+	return resp.PreparedPayment, resp.StatusCode, nil
 }
