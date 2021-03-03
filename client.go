@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 //URLTest is the api url used for tests
@@ -217,7 +218,7 @@ func (c *Client) Credit(transactionID int, amount float64) error {
 func (c *Client) Annul(transactionID int) error {
 	//Define the request body
 	req := struct {
-		XMLName       xml.Name `xml:"credit"`
+		XMLName       xml.Name `xml:"annul"`
 		TransactionID int      `xml:"transactionid"`
 	}{
 		TransactionID: transactionID,
@@ -225,6 +226,30 @@ func (c *Client) Annul(transactionID int) error {
 
 	//Make the post request to the api
 	if err := c.post("annul", req, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//Confirm calls the api to confirm a transaction. It is intended for card transactions.
+//It can only be performed on card transactions having the status AUTHORIZED. This will
+//result in a CONFIRMED transaction that will be captured (settled) on the given capture
+//date. Confirm is mainly used by merchants who are configured to confirm their transactions
+//themselves. Otherwise the transactions are confirmed automatically.
+func (c *Client) Confirm(transactionID int, captureDate time.Time) error {
+	//Define the request body
+	req := struct {
+		XMLName       xml.Name `xml:"confirm"`
+		TransactionID int      `xml:"transactionid"`
+		CaptureDate   string   `xml:"capturedate"`
+	}{
+		TransactionID: transactionID,
+		CaptureDate:   captureDate.Format("2006-01-02"),
+	}
+
+	//Make the post request to the api
+	if err := c.post("confirm", req, nil); err != nil {
 		return err
 	}
 
