@@ -44,7 +44,6 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 		return fmt.Errorf("package error: failed to marshal xml body: %v", err.Error())
 	}
 	b = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + string(b))
-
 	//Create the mac
 	h := sha512.New()
 	if _, err := h.Write([]byte(base64.StdEncoding.EncodeToString(b) + c.secret)); err != nil {
@@ -170,7 +169,7 @@ func (c *Client) Recur(order RecurOrder) (Transaction, error) {
 		return Transaction{}, err
 	}
 
-	return Transaction{}, nil
+	return resp.Transaction, nil
 }
 
 //CancelRecurSubscription calls the api to cancel an existing recur subscription so that

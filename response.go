@@ -34,5 +34,6 @@ type Transaction struct {
 	Currency         string `xml:"currency"`
 	SubscriptionID   int    `xml:"subscriptionid"`
 	SubscriptionType string `xml:"subscriptiontype"`
+	ID               string `xml:"id,attr"`
 	cardTransaction
 }
