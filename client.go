@@ -116,8 +116,6 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 //Otherwise a nil error is returned along with the statuscode returned by the api.
 //Always check the error and status code before using the prepared payment.
 func (c *Client) PreparePayment(order Order) (*PreparedPayment, error) {
-	order.Amount *= 100
-
 	//Make the post request to the api
 	var resp preparedPaymentResponse
 	if err := c.post("preparepayment", order, &resp); err != nil {
@@ -154,15 +152,12 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	if err := xml.Unmarshal(d, &p); err != nil {
 		return nil, fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
 	}
-	p.Transaction.Amount /= 100
 
 	return &p.Transaction, nil
 }
 
 //Recur calls the api to create a new transaction for an existing subscription
 func (c *Client) Recur(order RecurOrder) (Transaction, error) {
-	order.Amount *= 100
-
 	//Make the post request to the api
 	var resp paymentResponse
 	if err := c.post("recur", order, &resp); err != nil {
@@ -202,7 +197,7 @@ func (c *Client) Credit(transactionID int, amount float64) error {
 		AmountToCredit float64  `xml:"amounttocredit"`
 	}{
 		TransactionID:  transactionID,
-		AmountToCredit: amount * 100,
+		AmountToCredit: amount,
 	}
 
 	//Make the post request to the api
@@ -269,7 +264,7 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 		AmountToLower float64  `xml:"amounttolower"`
 	}{
 		TransactionID: transactionID,
-		AmountToLower: amountToLower * 100,
+		AmountToLower: amountToLower,
 	}
 
 	//Make the post request to the api

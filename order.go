@@ -62,7 +62,7 @@ type Order struct {
 	XMLName            xml.Name  `xml:"payment"`
 	PaymentMethod      string    `xml:"paymentmethod"`
 	Currency           string    `xml:"currency"`
-	Amount             float64   `xml:"amount"`
+	Amount             int       `xml:"amount"`
 	Vat                float64   `xml:"vat"`
 	CustomerRefNo      string    `xml:"customerrefno"`
 	ReturnURL          string    `xml:"returnurl"`
@@ -97,7 +97,7 @@ type OrderRows struct {
 type OrderRow struct {
 	Name          string  `xml:"name"`
 	Description   string  `xml:"description"`
-	Amount        float64 `xml:"amount"`
+	Amount        int     `xml:"amount"`
 	Vat           float64 `xml:"vat"`
 	Quantity      int     `xml:"quantity"`
 	ArticleNumber string  `xml:"sku"`
@@ -112,6 +112,6 @@ type RecurOrder struct {
 	CustomerRefNo  string   `xml:"customerrefno"`
 	SubscriptionID int      `xml:"subscriptionid"`
 	Currency       string   `xml:"currency"`
-	Amount         float64  `xml:"amount"`
+	Amount         int      `xml:"amount"`
 	Vat            float64  `xml:"vat"`
 }
