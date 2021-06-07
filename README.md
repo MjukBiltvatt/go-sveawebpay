@@ -1,5 +1,3 @@
-### NOTE: NOT PROPERLY TESTED
-
 This package is a lightweight wrapper for the Svea Ekonomi Payment Gateway API ([docs](https://www.svea.com/globalassets/sweden/foretag/betallosningar/e-handel/moduler-integration/payment_gateway_api_eng.2.8.8.pdf)) for Go. It provides easy to use functions/methods and error templates with most of the API implemented.
 
 ## Prerequisites
