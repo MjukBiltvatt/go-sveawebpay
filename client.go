@@ -161,7 +161,7 @@ func (c *Client) Recur(order RecurOrder) (Transaction, error) {
 	//Make the post request to the api
 	var resp paymentResponse
 	if err := c.post("recur", order, &resp); err != nil {
-		return resp.Transaction, err
+		return Transaction{}, err
 	}
 
 	return resp.Transaction, nil
