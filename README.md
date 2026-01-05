@@ -91,7 +91,7 @@ transaction := paymentResponse.Transaction
 ## Cancel a recur subscription
 Cancel an existing recur subscription so that no further recurs can be made on it.
 ```go
-err := c.CancelRecurSubscription(subscriptionID)
+response, err := c.CancelRecurSubscription(subscriptionID)
 ```
 
 ## Credit a transaction
