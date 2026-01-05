@@ -58,18 +58,19 @@ order.AddRow(
 )
 
 //Prepare the payment
-preparedPayment, err := c.PreparePayment(order)
+response, err := c.PreparePayment(order)
 if err != nil {
   //Handle error..
 }
 
 //Get the url to where the payment can be completed
-url := preparedPayment.URL()
+url := response.PreparedPayment.URL()
 ```
 
 ## Prepared payment callback (decode payment response)
 ```go
-transaction, err := c.DecodePaymentResponseBody(r)
+paymentResponse, err := c.DecodePaymentResponseBody(r)
+transaction := paymentResponse.Transaction
 ```
 
 ## Recur payment
@@ -83,7 +84,8 @@ order := sveawebpay.RecurOrder{
     Vat: 25,
 }
 
-transaction, err := c.Recur(order)
+paymentResponse, err := c.Recur(order)
+transaction := paymentResponse.Transaction
 ```
 
 ## Cancel a recur subscription
