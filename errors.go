@@ -18,7 +18,7 @@ func ErrToCode(err error) int {
 }
 
 // CodeToErr returns the error that corresponds to the specified status code. The
-// status code must be one returned by the svea api or "unknown erro: <code>" will be returned
+// status code must be one returned by the svea api or "unknown error: <code>" will be returned
 func CodeToErr(code int) error {
 	if code == 0 {
 		return nil
