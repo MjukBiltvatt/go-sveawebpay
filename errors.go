@@ -21,10 +21,8 @@ func CodeToErr(code int) error {
 		return nil
 	}
 
-	for c, e := range errMap {
-		if code == c {
-			return e
-		}
+	if e, ok := errMap[code]; ok {
+		return e
 	}
 
 	return ErrUnknown
