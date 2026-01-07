@@ -15,6 +15,12 @@ One of these errors stand out though. Some requests to the Svea Payment Gateway 
 
 The Svea Payment Gateway API expects the order amount to be represented in the smallest form of a given currency. Please note that [in this example](#recur-payment), an amount of 100 and a currency of SEK would result in 1 kr being charged, **not** 100.
 
+## Installation
+
+```bash
+go get github.com/MjukBiltvatt/go-sveawebpay/v2
+```
+
 ## Creating a client
 
 The first step of using this package is to create a client with the [above mentioned credentials](#prerequisites), this client will be used to make requests to the API.
