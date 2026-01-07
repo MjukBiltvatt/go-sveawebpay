@@ -1,6 +1,9 @@
 package sveawebpay
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // ErrToCode returns the status code that corresponds to the specified error. The
 // error must be one of the constants specified by this package or `-1` will be returned
@@ -25,7 +28,7 @@ func CodeToErr(code int) error {
 		return e
 	}
 
-	return ErrUnknown
+	return fmt.Errorf("unknown error: %d", code)
 }
 
 // ErrRequiresManualReview should not be handled like any other error, the
@@ -129,7 +132,7 @@ var (
 	ErrSwishRefundPayerError                     = errors.New("payer alias in the refund does not match the payee alias in the original payment")
 	ErrSwishRefundPayerOrgNrError                = errors.New("payer organization number do not match original payment payee organization number")
 	ErrSwishRefundPayeeSSNError                  = errors.New("the Payer SSN in the original payment is not the same as the SSN for the current Payee")
-	ErrUnknown                                   = errors.New("unknown error")
+	ErrUnknown                                   = errors.New("unknown error") // **Deprecated!** Unknown status codes will result in an error in the format `unknown error: <code>`.
 )
 
 // Map status codes to errors
