@@ -102,12 +102,7 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	}
 
 	//Check the status code for error
-	err = CodeToErr(r.StatusCode)
-	if err != ErrUnknown {
-		return err
-	}
-
-	return nil
+	return CodeToErr(r.StatusCode)
 }
 
 // PreparePayment calls the api to prepare a payment and if successful
