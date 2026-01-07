@@ -125,7 +125,7 @@ err := c.Annul(transactionID)
 Confirm a transaction. It is intended for card transactions. It can only be performed on card transactions having the status AUTHORIZED. This will result in a CONFIRMED transaction that will be captured (settled) on the given capture date. Confirm is mainly used by merchants who are configured to confirm their transactions themselves. Otherwise the transactions are confirmed automatically.
 
 ```go
-err := c.Annul(transactionID, time.Now())
+err := c.Confirm(transactionID, time.Now())
 ```
 
 ## Lower the amount to be captured on a transaction
