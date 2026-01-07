@@ -1,4 +1,4 @@
-module github.com/MjukBiltvatt/go-sveawebpay
+module github.com/MjukBiltvatt/go-sveawebpay/v2
 
 go 1.16
 
