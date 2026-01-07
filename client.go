@@ -270,7 +270,7 @@ func (c *Client) GetTransaction(transactionID int, customerRefNo string) (resp P
 			TransactionID: transactionID,
 		}
 	} else {
-		return nil, errors.New("package error: neither a transaction id or customer reference number is provided")
+		return resp, errors.New("package error: neither a transaction id or customer reference number is provided")
 	}
 
 	//Make the post request to the api
