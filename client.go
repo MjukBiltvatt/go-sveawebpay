@@ -14,20 +14,20 @@ import (
 	"time"
 )
 
-//URLTest is the api url used for tests
+// URLTest is the api url used for tests
 const URLTest = "https://webpaypaymentgatewaytest.svea.com/webpay/rest/"
 
-//URLProd is the api url used in prod
+// URLProd is the api url used in prod
 const URLProd = "https://webpaypaymentgateway.svea.com/webpay/rest/"
 
-//Client holds the necessary credentials to make requests to the svea apis
+// Client holds the necessary credentials to make requests to the svea apis
 type Client struct {
 	merchantID string
 	secret     string
 	Test       bool
 }
 
-//NewClient creates a new client used for calls to the svea payment gateway api
+// NewClient creates a new client used for calls to the svea payment gateway api
 func NewClient(merchantID string, secret string) Client {
 	return Client{
 		merchantID: merchantID,
@@ -35,8 +35,8 @@ func NewClient(merchantID string, secret string) Client {
 	}
 }
 
-//post makes a http post request to the specified url with the specified body and
-//unmarshals the response from xml to the specified response interface
+// post makes a http post request to the specified url with the specified body and
+// unmarshals the response from xml to the specified response interface
 func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	//Marshal xml body
 	b, err := xml.Marshal(body)
@@ -77,7 +77,7 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	}
 
 	//Unmarshal the response body
-	var x responseBody
+	var x ResponseBody
 	if err := xml.Unmarshal(buf.Bytes(), &x); err != nil {
 		return fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
 	}
@@ -96,39 +96,33 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	}
 
 	//Unmarshal the xml response to get the status code
-	var r response
+	var r Response
 	if err := xml.Unmarshal(d, &r); err != nil {
 		return fmt.Errorf("package error: failed to unmarshal xml response message status code: %v", err.Error())
 	}
 
 	//Check the status code for error
 	err = CodeToErr(r.StatusCode)
-	if err != ErrUnknown {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-//PreparePayment calls the api to prepare a payment and if successful
-//gets a url that can be visited to complete the payment. If an error occurs
-//ahead of the request, status code -1 and a non nil error is returned.
-//Otherwise a nil error is returned along with the statuscode returned by the api.
-//Always check the error and status code before using the prepared payment.
-func (c *Client) PreparePayment(order Order) (*PreparedPayment, error) {
+// PreparePayment calls the api to prepare a payment and if successful
+// gets a url that can be visited to complete the payment. If an error occurs
+// ahead of the request, status code -1 and a non nil error is returned.
+// Otherwise a nil error is returned along with the statuscode returned by the api.
+// Always check the error and status code before using the prepared payment.
+func (c *Client) PreparePayment(order Order) (PreparedPaymentResponse, error) {
 	//Make the post request to the api
-	var resp preparedPaymentResponse
-	if err := c.post("preparepayment", order, &resp); err != nil {
-		return nil, err
-	}
+	var resp PreparedPaymentResponse
+	err := c.post("preparepayment", order, &resp)
 	resp.PreparedPayment.test = c.Test
 
-	return &resp.PreparedPayment, nil
+	return resp, err
 }
 
-//DecodePaymentResponseBody decodes the response body of a call to the svea api.
-//It can for example be used in the callback of a prepared payment.
-func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
+// DecodePaymentResponseBody decodes the response body of a call to the svea api.
+// It can for example be used in the callback of a prepared payment.
+func (c *Client) DecodePaymentResponseBody(r io.Reader) (*PaymentResponse, error) {
 	//Read the response body
 	buf := new(bytes.Buffer)
 	if i, err := buf.ReadFrom(r); err != nil {
@@ -136,7 +130,7 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	}
 
 	//Unmarshal the response body
-	var rb responseBody
+	var rb ResponseBody
 	if err := xml.Unmarshal(buf.Bytes(), &rb); err != nil {
 		return nil, fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
 	}
@@ -148,28 +142,26 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	}
 
 	//Unmarshal the xml response message
-	var p paymentResponse
+	var p PaymentResponse
 	if err := xml.Unmarshal(d, &p); err != nil {
 		return nil, fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
 	}
 
-	return &p.Transaction, nil
+	return &p, nil
 }
 
-//Recur calls the api to create a new transaction for an existing subscription
-func (c *Client) Recur(order RecurOrder) (Transaction, error) {
+// Recur calls the api to create a new transaction for an existing subscription
+func (c *Client) Recur(order RecurOrder) (PaymentResponse, error) {
 	//Make the post request to the api
-	var resp paymentResponse
-	if err := c.post("recur", order, &resp); err != nil {
-		return Transaction{}, err
-	}
+	var resp PaymentResponse
+	err := c.post("recur", order, &resp)
 
-	return resp.Transaction, nil
+	return resp, err
 }
 
-//CancelRecurSubscription calls the api to cancel an existing recur subscription so that
-//no further recurs can be made on it
-func (c *Client) CancelRecurSubscription(subscriptionID int) error {
+// CancelRecurSubscription calls the api to cancel an existing recur subscription so that
+// no further recurs can be made on it
+func (c *Client) CancelRecurSubscription(subscriptionID int) (PaymentResponse, error) {
 	//Define the request body
 	req := struct {
 		XMLName        xml.Name `xml:"cancelrecursubscription"`
@@ -179,16 +171,14 @@ func (c *Client) CancelRecurSubscription(subscriptionID int) error {
 	}
 
 	//Make the post request to the api
-	var resp paymentResponse
-	if err := c.post("cancelrecursubscription", req, &resp); err != nil {
-		return err
-	}
+	var resp PaymentResponse
+	err := c.post("cancelrecursubscription", req, &resp)
 
-	return nil
+	return resp, err
 }
 
-//Credit calls the api to return money to the customer. Only transactions that have reached
-//the status SUCCESS can be credited
+// Credit calls the api to return money to the customer. Only transactions that have reached
+// the status SUCCESS can be credited
 func (c *Client) Credit(transactionID int, amount float64) error {
 	//Define the request body
 	req := struct {
@@ -201,15 +191,11 @@ func (c *Client) Credit(transactionID int, amount float64) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("credit", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("credit", req, nil)
 }
 
-//Annul calls the api to cancel a payment before it has been captured. It can only be
-//performed on card, invoice, or payment plan transactions having the status AUTHORIZED or CONFIRMED
+// Annul calls the api to cancel a payment before it has been captured. It can only be
+// performed on card, invoice, or payment plan transactions having the status AUTHORIZED or CONFIRMED
 func (c *Client) Annul(transactionID int) error {
 	//Define the request body
 	req := struct {
@@ -220,18 +206,14 @@ func (c *Client) Annul(transactionID int) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("annul", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("annul", req, nil)
 }
 
-//Confirm calls the api to confirm a transaction. It is intended for card transactions.
-//It can only be performed on card transactions having the status AUTHORIZED. This will
-//result in a CONFIRMED transaction that will be captured (settled) on the given capture
-//date. Confirm is mainly used by merchants who are configured to confirm their transactions
-//themselves. Otherwise the transactions are confirmed automatically.
+// Confirm calls the api to confirm a transaction. It is intended for card transactions.
+// It can only be performed on card transactions having the status AUTHORIZED. This will
+// result in a CONFIRMED transaction that will be captured (settled) on the given capture
+// date. Confirm is mainly used by merchants who are configured to confirm their transactions
+// themselves. Otherwise the transactions are confirmed automatically.
 func (c *Client) Confirm(transactionID int, captureDate time.Time) error {
 	//Define the request body
 	req := struct {
@@ -244,18 +226,14 @@ func (c *Client) Confirm(transactionID int, captureDate time.Time) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("confirm", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("confirm", req, nil)
 }
 
-//LowerAmount calls the api to lower the amount on a transaction before it has been captured.
-//It is intended for card transactions having the status AUTHORIZED or CONFIRMED. It can be
-//used e.g. if the merchant is unable to deliver all of the items that was ordered by the customer,
-//and wants to lower the total amount to pay. If the `amountToLower` is equal to the authorized
-//amount, the transaction status will change to annulled.
+// LowerAmount calls the api to lower the amount on a transaction before it has been captured.
+// It is intended for card transactions having the status AUTHORIZED or CONFIRMED. It can be
+// used e.g. if the merchant is unable to deliver all of the items that was ordered by the customer,
+// and wants to lower the total amount to pay. If the `amountToLower` is equal to the authorized
+// amount, the transaction status will change to annulled.
 func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 	//Define the request body
 	req := struct {
@@ -268,19 +246,15 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("loweramount", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("loweramount", req, nil)
 }
 
-//GetTransaction calls the api to get information about a specific order with either the specified
-//transaction-id or customer reference number. Both does not need to be provided. If `transactionID <= 0`,
-//`customerRefNo` will be used. If `customerRefNo` is an empty string as well a package error will
-//be returned. If both are set `transactionID` will be used.
+// GetTransaction calls the api to get information about a specific order with either the specified
+// transaction-id or customer reference number. Both does not need to be provided. If `transactionID <= 0`,
+// `customerRefNo` will be used. If `customerRefNo` is an empty string as well a package error will
+// be returned. If both are set `transactionID` will be used.
 //
-//**Please only use this when needed. Repetitive polling is not allowed.**
+// **Please only use this when needed. Repetitive polling is not allowed.**
 func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Transaction, error) {
 	var req interface{}
 	var method string
@@ -309,7 +283,7 @@ func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Trans
 	}
 
 	//Make the post request to the api
-	var resp paymentResponse
+	var resp PaymentResponse
 	if err := c.post(method, req, &resp); err != nil {
 		return nil, err
 	}
