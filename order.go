@@ -78,7 +78,7 @@ type Order struct {
 	Rows               OrderRows `xml:"orderrows"`
 }
 
-// AddRow appends an order row the the slice of order rows in the order
+// AddRow appends an order row the slice of order rows in the order
 func (o *Order) AddRow(row OrderRow) {
 	o.Rows.Rows = append(o.Rows.Rows, row)
 }
