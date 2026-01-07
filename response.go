@@ -1,24 +1,29 @@
 package sveawebpay
 
-type responseBody struct {
+// The raw response from the Svea Payment Gateway API
+type ResponseBody struct {
 	Message string `xml:"message"`
 }
 
-type response struct {
+// The response from the Svea Payment Gateway API with the status code isolated
+type Response struct {
 	StatusCode int `xml:"statuscode"`
 }
 
-type preparedPaymentResponse struct {
+// Prepared payment response
+type PreparedPaymentResponse struct {
 	PreparedPayment PreparedPayment `xml:"preparedpayment"`
-	response
+	Response
 }
 
-type paymentResponse struct {
+// Payment response containing the affected transaction object
+type PaymentResponse struct {
 	Transaction Transaction `xml:"transaction"`
-	response
+	Response
 }
 
-type cardTransaction struct {
+// A card transaction as represented in the responses from the API
+type CardTransaction struct {
 	CardType     string `xml:"cardtype"`
 	MaskedCardNo string `xml:"maskedcardno"`
 	ExpiryMonth  string `xml:"expirymonth"`
@@ -26,7 +31,7 @@ type cardTransaction struct {
 	AuthCode     string `xml:"authcode"`
 }
 
-// Transaction represents a transaction received in the response message from the svea api
+// A payment transaction as represented in the responses from the API
 type Transaction struct {
 	PaymentMethod    string `xml:"paymentmethod"`
 	CustomerRefNo    string `xml:"customerrefno"`
@@ -35,5 +40,5 @@ type Transaction struct {
 	SubscriptionID   int    `xml:"subscriptionid"`
 	SubscriptionType string `xml:"subscriptiontype"`
 	ID               string `xml:"id,attr"`
-	cardTransaction
+	CardTransaction
 }
