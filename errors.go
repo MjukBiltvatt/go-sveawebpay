@@ -2,8 +2,8 @@ package sveawebpay
 
 import "errors"
 
-//ErrToCode returns the status code that corresponds to the specified error. The
-//error must be one of the constants specified by this package or `-1` will be returned
+// ErrToCode returns the status code that corresponds to the specified error. The
+// error must be one of the constants specified by this package or `-1` will be returned
 func ErrToCode(err error) int {
 	for c, e := range errMap {
 		if err == e {
@@ -14,8 +14,8 @@ func ErrToCode(err error) int {
 	return -1
 }
 
-//CodeToErr returns the error that corresponds to the specified status code. The
-//status code must be one returned by the svea api or `ErrUnknown` will be returned
+// CodeToErr returns the error that corresponds to the specified status code. The
+// status code must be one returned by the svea api or "unknown error: <code>" will be returned
 func CodeToErr(code int) error {
 	for c, e := range errMap {
 		if code == c {
@@ -26,11 +26,11 @@ func CodeToErr(code int) error {
 	return ErrUnknown
 }
 
-//ErrRequiresManualReview should not be handled like any other error, the
-//request was successful but still for some reason needs to be reviewed manually
+// ErrRequiresManualReview should not be handled like any other error, the
+// request was successful but still for some reason needs to be reviewed manually
 var ErrRequiresManualReview = errors.New("request performed successfully but requires manual review by merchant")
 
-//Possible errors returned by the svea api
+// Possible errors returned by the svea api
 var (
 	ErrInternalError                             = errors.New("internal system error")
 	ErrXMLParseFail                              = errors.New("invalid XML")
@@ -72,6 +72,7 @@ var (
 	ErrBrowserNotSupported                       = errors.New("the browser version is too old")
 	ErrPending                                   = errors.New("the request is still being processed")
 	ErrCreditPending                             = errors.New("the credit could not be handled instantly. It is put in a queue and it will be processed in due time")
+	ErrCardClosed                                = errors.New("card is closed")
 	ErrBadTransactionID                          = errors.New("invalid transaction ID")
 	ErrBadMerchantID                             = errors.New("invalid merchant ID")
 	ErrBadLang                                   = errors.New("invalid language")
@@ -112,6 +113,7 @@ var (
 	ErrBadOrderRow                               = errors.New("invalid format for Order Row")
 	ErrBadPayerAlias                             = errors.New("invalid format for Payer AliasPhone number")
 	ErrBadShowStoreCardDialog                    = errors.New("invalid value for Show Store Card Dialog")
+	ErrServiceUnavailableTryLater                = errors.New("temporary problem, try later")
 	ErrAntiFraudCardBinNotAllowed                = errors.New("antifraud - cardbin not allowed")
 	ErrAntiFraudIPLocationNotAllowed             = errors.New("antifraud – iplocation not allowed")
 	ErrAntiFraudIPLocationAndBinDoesntMatch      = errors.New("antifraud – ip-location and bin does not match")
@@ -128,7 +130,7 @@ var (
 	ErrUnknown                                   = errors.New("unknown error")
 )
 
-//Map status codes to errors
+// Map status codes to errors
 var errMap = map[int]error{
 	1:   ErrRequiresManualReview,
 	100: ErrInternalError,
@@ -171,6 +173,7 @@ var errMap = map[int]error{
 	148: ErrBrowserNotSupported,
 	149: ErrPending,
 	150: ErrCreditPending,
+	152: ErrCardClosed,
 	301: ErrBadTransactionID,
 	303: ErrBadMerchantID,
 	304: ErrBadLang,
@@ -211,6 +214,7 @@ var errMap = map[int]error{
 	345: ErrBadOrderRow,
 	346: ErrBadPayerAlias,
 	347: ErrBadShowStoreCardDialog,
+	373: ErrServiceUnavailableTryLater,
 	500: ErrAntiFraudCardBinNotAllowed,
 	501: ErrAntiFraudIPLocationNotAllowed,
 	502: ErrAntiFraudIPLocationAndBinDoesntMatch,

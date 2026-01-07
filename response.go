@@ -26,7 +26,7 @@ type cardTransaction struct {
 	AuthCode     string `xml:"authcode"`
 }
 
-//Transaction represents a transaction receieved in the response message from the svea api
+// Transaction represents a transaction received in the response message from the svea api
 type Transaction struct {
 	PaymentMethod    string `xml:"paymentmethod"`
 	CustomerRefNo    string `xml:"customerrefno"`
