@@ -2,16 +2,21 @@ package sveawebpay
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/joho/godotenv"
 )
 
-// TestClientPreparePayment tests the `Client` method `PreparePayment`
+// TestClientPreparePayment is an integration test that validates PreparePayment
+// with real API calls. Requires the following environment variables:
+//   - MERCHANT_ID_TEST: Test merchant ID
+//   - SECRET_TEST: Test secret
 func TestClientPreparePayment(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
-		t.Errorf("failed to load .env: %v", err.Error())
+		t.Errorf("failed to load .env: %v", err)
+		return
 	}
 
 	//Create client
@@ -62,4 +67,88 @@ func TestClientPreparePayment(t *testing.T) {
 	t.Logf("URL: %v", response.PreparedPayment.URL())
 	t.Logf("Statuscode response: %v", response.StatusCode)
 	t.Logf("Statuscode ErrToCode: %v", ErrToCode(err))
+}
+
+// TestClientGetTransaction is an integration test that validates GetTransaction
+// with real API calls. Requires the following environment variables:
+//   - MERCHANT_ID_TEST: Test merchant ID
+//   - SECRET_TEST: Test secret
+//   - CUSTOMER_REF_NO: Valid customer reference number
+//   - TRANSACTION_ID: Valid transaction ID (numeric)
+func TestClientGetTransaction(t *testing.T) {
+	//Load .env file
+	if err := godotenv.Load(); err != nil {
+		t.Errorf("failed to load .env: %v", err)
+		return
+	}
+
+	//Create client
+	c := NewClient(os.Getenv("MERCHANT_ID_TEST"), os.Getenv("SECRET_TEST"))
+	c.Test = true
+
+	customerRefNo := os.Getenv("CUSTOMER_REF_NO")
+	transactionID, err := strconv.Atoi(os.Getenv("TRANSACTION_ID"))
+	if err != nil {
+		t.Errorf("Failed to parse TRANSACTION_ID env var: %v", err)
+		return
+	}
+
+	tests := []struct {
+		name          string
+		transactionID int
+		customerRefNo string
+		wantErr       bool
+	}{
+		{
+			name:          "Get by Transaction ID",
+			transactionID: transactionID,
+			customerRefNo: "",
+			wantErr:       false,
+		},
+		{
+			name:          "Get by Customer Ref No",
+			transactionID: 0,
+			customerRefNo: customerRefNo,
+			wantErr:       false,
+		},
+		{
+			name:          "Both ID and Ref No (ID priority)",
+			transactionID: transactionID,
+			customerRefNo: customerRefNo,
+			wantErr:       false,
+		},
+		{
+			name:          "Neither",
+			transactionID: 0,
+			customerRefNo: "",
+			wantErr:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transaction, err := c.GetTransaction(tt.transactionID, tt.customerRefNo)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTransaction() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && transaction == nil {
+				t.Error("GetTransaction() returned nil transaction without error")
+				return
+			}
+			if !tt.wantErr {
+				if tt.transactionID > 0 {
+					if transaction.ID != strconv.Itoa(tt.transactionID) {
+						t.Errorf("GetTransaction() ID = %v, want %v", transaction.ID, tt.transactionID)
+					}
+				} else if tt.customerRefNo != "" {
+					// If we searched by customerRefNo, or if we searched by ID but customerRefNo is present in response
+					// Note: If we search by ID, the API should return the transaction which might have this customerRefNo
+					if transaction.CustomerRefNo != tt.customerRefNo {
+						t.Errorf("GetTransaction() CustomerRefNo = %v, want %v", transaction.CustomerRefNo, tt.customerRefNo)
+					}
+				}
+			}
+		})
+	}
 }

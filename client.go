@@ -241,9 +241,9 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 }
 
 // GetTransaction calls the api to get information about a specific order with either the specified
-// transaction-id or customer reference number. Both does not need to be provided. If `transactionID <= 0`,
-// `customerRefNo` will be used. If `customerRefNo` is an empty string as well a package error will
-// be returned. If both are set `transactionID` will be used.
+// transaction-id or customer reference number. Both does not need to be provided. `transactionID`
+// will be used if > 0 otherwise customerRefNo will be used. If `customerRefNo` is an empty string
+// as well a package error will be returned. If both are set `transactionID` will be used.
 //
 // **Please only use this when needed. Repetitive polling is not allowed.**
 func (c *Client) GetTransaction(transactionID int, customerRefNo string) (resp PaymentResponse, err error) {
@@ -251,23 +251,23 @@ func (c *Client) GetTransaction(transactionID int, customerRefNo string) (resp P
 	var method string
 
 	//Define the request body
-	if transactionID <= 0 {
-		//Transaction id is not provided, use the customer reference number
-		method = "querycustomerrefno"
-		req = struct {
-			XMLName       xml.Name `xml:"loweramount"`
-			CustomerRefNo string   `xml:"customerrefno"`
-		}{
-			CustomerRefNo: customerRefNo,
-		}
-	} else if len(customerRefNo) > 0 {
-		//Use the customer reference number if the transaction id is not provided
+	if transactionID > 0 {
+		//Use the transaction id if provided
 		method = "querytransactionid"
 		req = struct {
-			XMLName       xml.Name `xml:"loweramount"`
+			XMLName       xml.Name `xml:"querytransactionid"`
 			TransactionID int      `xml:"transactionid"`
 		}{
 			TransactionID: transactionID,
+		}
+	} else if len(customerRefNo) > 0 {
+		//Transaction id is not provided, use the customer reference number
+		method = "querycustomerrefno"
+		req = struct {
+			XMLName       xml.Name `xml:"querycustomerrefno"`
+			CustomerRefNo string   `xml:"customerrefno"`
+		}{
+			CustomerRefNo: customerRefNo,
 		}
 	} else {
 		return resp, errors.New("package error: neither a transaction id or customer reference number is provided")
