@@ -77,7 +77,7 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	}
 
 	//Unmarshal the response body
-	var x responseBody
+	var x ResponseBody
 	if err := xml.Unmarshal(buf.Bytes(), &x); err != nil {
 		return fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
 	}
@@ -96,7 +96,7 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 	}
 
 	//Unmarshal the xml response to get the status code
-	var r response
+	var r Response
 	if err := xml.Unmarshal(d, &r); err != nil {
 		return fmt.Errorf("package error: failed to unmarshal xml response message status code: %v", err.Error())
 	}
@@ -110,20 +110,15 @@ func (c *Client) post(method string, body interface{}, dst interface{}) error {
 // ahead of the request, status code -1 and a non nil error is returned.
 // Otherwise a nil error is returned along with the statuscode returned by the api.
 // Always check the error and status code before using the prepared payment.
-func (c *Client) PreparePayment(order Order) (*PreparedPayment, error) {
-	//Make the post request to the api
-	var resp preparedPaymentResponse
-	if err := c.post("preparepayment", order, &resp); err != nil {
-		return nil, err
-	}
+func (c *Client) PreparePayment(order Order) (resp PreparedPaymentResponse, err error) {
+	err = c.post("preparepayment", order, &resp)
 	resp.PreparedPayment.test = c.Test
-
-	return &resp.PreparedPayment, nil
+	return resp, err
 }
 
 // DecodePaymentResponseBody decodes the response body of a call to the svea api.
 // It can for example be used in the callback of a prepared payment.
-func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
+func (c *Client) DecodePaymentResponseBody(r io.Reader) (*PaymentResponse, error) {
 	//Read the response body
 	buf := new(bytes.Buffer)
 	if i, err := buf.ReadFrom(r); err != nil {
@@ -131,7 +126,7 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	}
 
 	//Unmarshal the response body
-	var rb responseBody
+	var rb ResponseBody
 	if err := xml.Unmarshal(buf.Bytes(), &rb); err != nil {
 		return nil, fmt.Errorf("package error: failed to unmarshal xml response body: %v", err.Error())
 	}
@@ -143,28 +138,23 @@ func (c *Client) DecodePaymentResponseBody(r io.Reader) (*Transaction, error) {
 	}
 
 	//Unmarshal the xml response message
-	var p paymentResponse
+	var p PaymentResponse
 	if err := xml.Unmarshal(d, &p); err != nil {
 		return nil, fmt.Errorf("package error: failed to unmarshal xml response message: %v", err.Error())
 	}
 
-	return &p.Transaction, nil
+	return &p, nil
 }
 
 // Recur calls the api to create a new transaction for an existing subscription
-func (c *Client) Recur(order RecurOrder) (Transaction, error) {
-	//Make the post request to the api
-	var resp paymentResponse
-	if err := c.post("recur", order, &resp); err != nil {
-		return Transaction{}, err
-	}
-
-	return resp.Transaction, nil
+func (c *Client) Recur(order RecurOrder) (resp PaymentResponse, err error) {
+	err = c.post("recur", order, &resp)
+	return resp, err
 }
 
 // CancelRecurSubscription calls the api to cancel an existing recur subscription so that
 // no further recurs can be made on it
-func (c *Client) CancelRecurSubscription(subscriptionID int) error {
+func (c *Client) CancelRecurSubscription(subscriptionID int) (resp PaymentResponse, err error) {
 	//Define the request body
 	req := struct {
 		XMLName        xml.Name `xml:"cancelrecursubscription"`
@@ -174,12 +164,8 @@ func (c *Client) CancelRecurSubscription(subscriptionID int) error {
 	}
 
 	//Make the post request to the api
-	var resp paymentResponse
-	if err := c.post("cancelrecursubscription", req, &resp); err != nil {
-		return err
-	}
-
-	return nil
+	err = c.post("cancelrecursubscription", req, &resp)
+	return resp, err
 }
 
 // Credit calls the api to return money to the customer. Only transactions that have reached
@@ -196,11 +182,7 @@ func (c *Client) Credit(transactionID int, amount float64) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("credit", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("credit", req, nil)
 }
 
 // Annul calls the api to cancel a payment before it has been captured. It can only be
@@ -215,11 +197,7 @@ func (c *Client) Annul(transactionID int) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("annul", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("annul", req, nil)
 }
 
 // Confirm calls the api to confirm a transaction. It is intended for card transactions.
@@ -239,11 +217,7 @@ func (c *Client) Confirm(transactionID int, captureDate time.Time) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("confirm", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("confirm", req, nil)
 }
 
 // LowerAmount calls the api to lower the amount on a transaction before it has been captured.
@@ -263,11 +237,7 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 	}
 
 	//Make the post request to the api
-	if err := c.post("loweramount", req, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return c.post("loweramount", req, nil)
 }
 
 // GetTransaction calls the api to get information about a specific order with either the specified
@@ -276,7 +246,7 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 // be returned. If both are set `transactionID` will be used.
 //
 // **Please only use this when needed. Repetitive polling is not allowed.**
-func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Transaction, error) {
+func (c *Client) GetTransaction(transactionID int, customerRefNo string) (resp PaymentResponse, err error) {
 	var req interface{}
 	var method string
 
@@ -300,14 +270,10 @@ func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Trans
 			TransactionID: transactionID,
 		}
 	} else {
-		return nil, errors.New("package error: neither a transaction id or customer reference number is provided")
+		return resp, errors.New("package error: neither a transaction id or customer reference number is provided")
 	}
 
 	//Make the post request to the api
-	var resp paymentResponse
-	if err := c.post(method, req, &resp); err != nil {
-		return nil, err
-	}
-
-	return &resp.Transaction, nil
+	err = c.post(method, req, &resp)
+	return resp, err
 }

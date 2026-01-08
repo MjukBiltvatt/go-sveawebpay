@@ -2,7 +2,7 @@ package sveawebpay
 
 import "encoding/xml"
 
-//Available payment methods
+// Available payment methods
 const (
 	PaymentMethodCard   string = "SVEACARDPAY"
 	PaymentMethodSwish  string = "SWISH"
@@ -19,7 +19,7 @@ const (
 	SubscriptionTypeRecurringCapture string = "RECURRINGCAPTURE"
 )
 
-//Available language codes
+// Available language codes
 const (
 	LangSwedish   string = "sv"
 	LangDanish    string = "da"
@@ -34,9 +34,9 @@ const (
 	LangDutch     string = "nl"
 )
 
-//During the lifetime of a transaction, the status may change many times, most often ending up as
-//either SUCCESS or FAILED. The status can be obtained by calling the `GetTransaction` method.
-//The range of possible statuses for a specific transaction depends on its payment method.
+// During the lifetime of a transaction, the status may change many times, most often ending up as
+// either SUCCESS or FAILED. The status can be obtained by calling the `GetTransaction` method.
+// The range of possible statuses for a specific transaction depends on its payment method.
 const (
 	TransStatusNew              string = "NEW"
 	TransStatusReceived         string = "RECEIVED"
@@ -57,7 +57,7 @@ const (
 	TransStatusError            string = "ERROR"
 )
 
-//Order represents a payment message to the payment gateway api
+// Order represents a payment message to the payment gateway api
 type Order struct {
 	XMLName            xml.Name  `xml:"payment"`
 	PaymentMethod      string    `xml:"paymentmethod"`
@@ -78,22 +78,22 @@ type Order struct {
 	Rows               OrderRows `xml:"orderrows"`
 }
 
-//AddRow appends an order row the the slice of order rows in the order
+// AddRow appends an order row the slice of order rows in the order
 func (o *Order) AddRow(row OrderRow) {
 	o.Rows.Rows = append(o.Rows.Rows, row)
 }
 
-//SetRows sets the order rows slice in the order
+// SetRows sets the order rows slice in the order
 func (o *Order) SetRows(rows []OrderRow) {
 	o.Rows.Rows = rows
 }
 
-//OrderRows represents the xml `orderrows` element in an order
+// OrderRows represents the xml `orderrows` element in an order
 type OrderRows struct {
 	Rows []OrderRow `xml:"row"`
 }
 
-//OrderRow represents an order row
+// OrderRow represents an order row
 type OrderRow struct {
 	Name          string  `xml:"name"`
 	Description   string  `xml:"description"`
@@ -105,8 +105,8 @@ type OrderRow struct {
 	IPAddress     string  `xml:"ipaddress"`
 }
 
-//RecurOrder represents an order to be used to create a recur transaction for
-//an existing subscription
+// RecurOrder represents an order to be used to create a recur transaction for
+// an existing subscription
 type RecurOrder struct {
 	XMLName        xml.Name `xml:"recur"`
 	CustomerRefNo  string   `xml:"customerrefno"`
