@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//TestClientPreparePayment tests the `Client` method `PreparePayment`
+// TestClientPreparePayment tests the `Client` method `PreparePayment`
 func TestClientPreparePayment(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
@@ -59,6 +59,8 @@ func TestClientPreparePayment(t *testing.T) {
 	}
 
 	t.Logf("PreparedPayment: %v", preparedPayment)
-	t.Logf("URL: %v", preparedPayment.URL())
+	if preparedPayment != nil {
+		t.Logf("URL: %v", preparedPayment.URL())
+	}
 	t.Logf("Statuscode: %v", ErrToCode(err))
 }
