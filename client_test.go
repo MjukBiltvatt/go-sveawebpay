@@ -15,7 +15,8 @@ import (
 func TestClientPreparePayment(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
-		t.Errorf("failed to load .env: %v", err.Error())
+		t.Errorf("failed to load .env: %v", err)
+		return
 	}
 
 	//Create client
@@ -78,7 +79,8 @@ func TestClientPreparePayment(t *testing.T) {
 func TestClientGetTransaction(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
-		t.Errorf("failed to load .env: %v", err.Error())
+		t.Errorf("failed to load .env: %v", err)
+		return
 	}
 
 	//Create client
