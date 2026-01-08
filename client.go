@@ -273,7 +273,7 @@ func (c *Client) LowerAmount(transactionID int, amountToLower float64) error {
 // GetTransaction calls the api to get information about a specific order with either the specified
 // transaction-id or customer reference number. Both does not need to be provided. `transactionID`
 // will be used if > 0 otherwise customerRefNo will be used. If `customerRefNo` is an empty string
-// as well a package error will  be returned. If both are set `transactionID` will be used.
+// as well a package error will be returned. If both are set `transactionID` will be used.
 //
 // **Please only use this when needed. Repetitive polling is not allowed.**
 func (c *Client) GetTransaction(transactionID int, customerRefNo string) (*Transaction, error) {
