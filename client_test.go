@@ -127,25 +127,21 @@ func TestClientGetTransaction(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transaction, err := c.GetTransaction(tt.transactionID, tt.customerRefNo)
+			response, err := c.GetTransaction(tt.transactionID, tt.customerRefNo)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetTransaction() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr && transaction == nil {
-				t.Error("GetTransaction() returned nil transaction without error")
-				return
-			}
 			if !tt.wantErr {
 				if tt.transactionID > 0 {
-					if transaction.ID != strconv.Itoa(tt.transactionID) {
-						t.Errorf("GetTransaction() ID = %v, want %v", transaction.ID, tt.transactionID)
+					if response.Transaction.ID != strconv.Itoa(tt.transactionID) {
+						t.Errorf("GetTransaction() ID = %v, want %v", response.Transaction.ID, tt.transactionID)
 					}
 				} else if tt.customerRefNo != "" {
 					// If we searched by customerRefNo, or if we searched by ID but customerRefNo is present in response
 					// Note: If we search by ID, the API should return the transaction which might have this customerRefNo
-					if transaction.CustomerRefNo != tt.customerRefNo {
-						t.Errorf("GetTransaction() CustomerRefNo = %v, want %v", transaction.CustomerRefNo, tt.customerRefNo)
+					if response.Transaction.CustomerRefNo != tt.customerRefNo {
+						t.Errorf("GetTransaction() CustomerRefNo = %v, want %v", response.Transaction.CustomerRefNo, tt.customerRefNo)
 					}
 				}
 			}
