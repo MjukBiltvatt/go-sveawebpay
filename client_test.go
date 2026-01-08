@@ -80,6 +80,7 @@ func TestClientGetTransaction(t *testing.T) {
 	transactionID, err := strconv.Atoi(os.Getenv("TRANSACTION_ID"))
 	if err != nil {
 		t.Errorf("Failed to parse TRANSACTION_ID env var: %v", err)
+		return
 	}
 
 	tests := []struct {
@@ -92,19 +93,19 @@ func TestClientGetTransaction(t *testing.T) {
 			name:          "Get by Transaction ID",
 			transactionID: transactionID,
 			customerRefNo: "",
-			wantErr:       transactionID == 0, // Should fail if no env var is set
+			wantErr:       false,
 		},
 		{
 			name:          "Get by Customer Ref No",
 			transactionID: 0,
 			customerRefNo: customerRefNo,
-			wantErr:       customerRefNo == "", // Should fail if no env var is set
+			wantErr:       false,
 		},
 		{
 			name:          "Both ID and Ref No (ID priority)",
 			transactionID: transactionID,
 			customerRefNo: customerRefNo,
-			wantErr:       transactionID == 0,
+			wantErr:       false,
 		},
 		{
 			name:          "Neither",
