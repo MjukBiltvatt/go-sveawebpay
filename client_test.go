@@ -8,7 +8,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TestClientPreparePayment tests the `Client` method `PreparePayment`
+// TestClientPreparePayment is an integration test that validates PreparePayment
+// with real API calls. Requires the following environment variables:
+//   - MERCHANT_ID_TEST: Test merchant ID
+//   - SECRET_TEST: Test secret
 func TestClientPreparePayment(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
@@ -66,6 +69,12 @@ func TestClientPreparePayment(t *testing.T) {
 	t.Logf("Statuscode: %v", ErrToCode(err))
 }
 
+// TestClientGetTransaction is an integration test that validates GetTransaction
+// with real API calls. Requires the following environment variables:
+//   - MERCHANT_ID_TEST: Test merchant ID
+//   - SECRET_TEST: Test secret
+//   - CUSTOMER_REF_NO: Valid customer reference number
+//   - TRANSACTION_ID: Valid transaction ID (numeric)
 func TestClientGetTransaction(t *testing.T) {
 	//Load .env file
 	if err := godotenv.Load(); err != nil {
