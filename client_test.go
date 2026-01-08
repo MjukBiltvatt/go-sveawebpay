@@ -2,6 +2,7 @@ package sveawebpay
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -63,4 +64,67 @@ func TestClientPreparePayment(t *testing.T) {
 		t.Logf("URL: %v", preparedPayment.URL())
 	}
 	t.Logf("Statuscode: %v", ErrToCode(err))
+}
+
+func TestClientGetTransaction(t *testing.T) {
+	//Load .env file
+	if err := godotenv.Load(); err != nil {
+		t.Logf("failed to load .env: %v", err.Error())
+	}
+
+	//Create client
+	c := NewClient(os.Getenv("MERCHANT_ID_TEST"), os.Getenv("SECRET_TEST"))
+	c.Test = true
+
+	customerRefNo := os.Getenv("CUSTOMER_REF_NO")
+	transactionID, err := strconv.Atoi(os.Getenv("TRANSACTION_ID"))
+	if err != nil {
+		t.Errorf("Failed to parse TRANSACTION_ID env var: %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		transactionID int
+		customerRefNo string
+		wantErr       bool
+	}{
+		{
+			name:          "Get by Transaction ID",
+			transactionID: transactionID,
+			customerRefNo: "",
+			wantErr:       transactionID == 0, // Should fail if no env var is set
+		},
+		{
+			name:          "Get by Customer Ref No",
+			transactionID: 0,
+			customerRefNo: customerRefNo,
+			wantErr:       customerRefNo == "", // Should fail if no env var is set
+		},
+		{
+			name:          "Both ID and Ref No (ID priority)",
+			transactionID: transactionID,
+			customerRefNo: customerRefNo,
+			wantErr:       transactionID == 0,
+		},
+		{
+			name:          "Neither",
+			transactionID: 0,
+			customerRefNo: "",
+			wantErr:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transaction, err := c.GetTransaction(tt.transactionID, tt.customerRefNo)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTransaction() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && transaction == nil {
+				t.Error("GetTransaction() returned nil transaction without error")
+				return
+			}
+		})
+	}
 }
